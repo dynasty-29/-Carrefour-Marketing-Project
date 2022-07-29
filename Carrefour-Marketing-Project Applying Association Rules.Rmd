@@ -1,0 +1,174 @@
+---
+title: "Carrefour-Marketing-Project Applying Association Rules"
+author: "Dynasty"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# **Introduction**
+
+Carrefour has 13 outlets mostly located in the suburbs of Kenya's capital city, Nairobi. Their mission is to provide our customers with quality services, products and food accessible to all across all distribution channels.
+
+## **Problem Statement**
+
+The project aim to inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax).
+
+## **Metrics of success**
+a. To uncover how the items are associated with each other
+b. Provide insights for our analysis.
+
+
+## **Association Analysis**
+
+Loading important libraries
+```{r}
+library(arules)
+library(arulesViz)
+```
+
+
+Loading the data set
+```{r}
+path <- "http://bit.ly/SupermarketDatasetII"
+
+data <-read.transactions(path, sep = ",")
+data 
+```
+
+Previewing objects in our data set
+```{r}
+dim(data)
+```
+
+
+
+Verifying the object's class
+```{r}
+class(data)
+```
+
+Previewing our first 5 items
+```{r}
+inspect(data[1:5])
+```
+The results above shows combination of items in first five items
+
+
+We can also view the items as follows
+```{r}
+items<-as.data.frame(itemLabels(data))
+colnames(items) <- "Item"
+head(items, 10)
+```
+
+Previewing the summary of data
+```{r}
+summary(data)
+```
+ This shows the  most purchased items as almonds, antioxidant juice, and asparagus. It also shows the distribution of the item sets (no. of items purchased in each transaction),
+
+
+Exploring the frequency of some items
+```{r}
+itemFrequency(data[, 5:12],type = "absolute")
+```
+The results above shows transactions ranging from 5 to 12 
+
+
+Plotting a frequency chart
+```{r}
+par(mfrow = c(1, 2))
+itemFrequencyPlot(data, topN = 10,col="darkgreen")
+```
+
+The above graph shows top 10 most common items in the data set.
+
+
+Displaying items whose relative importance is at least 10%
+```{r}
+itemFrequencyPlot(data, support = 0.1,col="blue")
+```
+
+
+
+Let's now Build a model based on association rules 
+a. Using Minimum support of 0.001 and CI of 0.8
+```{r}
+rules <- apriori (data, parameter = list(supp = 0.001, conf = 0.8))
+```
+```{r}
+summary(rules)
+```
+
+Observing rules built in our mode
+```{r}
+inspect(rules[1:5])
+```
+The table above shows that if someone buys mushroom cream sauce, pasta they are 88% likely to buy escalope too. 
+
+We can plot this as follows
+
+```{r}
+inspect(sort(rules, by = 'lift')[1:10])
+```
+
+```{r}
+plot(rules, method = "graph", 
+     measure = "confidence", shading = "lift")
+```
+
+The graph show association rules by confidence and lift. From the previous table we saw that if someone buys mushroom cream sauce, pasta they are 88% likely to buy escalope too.  On the graph we can clearly see this association via lift.
+
+
+We can try using different support and confidence interval 
+
+b. Using Minimum support of 0.002 and CI of 0.8
+```{r}
+rules2 <- apriori (data, parameter = list(supp = 0.002, conf = 0.8))
+```
+
+
+
+```{r}
+plot(rules2, method = "graph", 
+     measure = "confidence", shading = "lift")
+```
+
+The graph shows less feature due to use of higher support value
+
+c. Using Minimum support of 0.002 and CI of 0.6
+```{r}
+rules3 <- apriori (data, parameter = list(supp = 0.002, conf = 0.6))
+```
+
+```{r}
+inspect(rules3[1:5])
+```
+
+
+```{r}
+plot(rules3, method = "graph", 
+     measure = "confidence", shading = "lift")
+```
+
+The difference of using higher alpha or support and lower confidence is observed above but with the same results. 
+
+
+**Conclusion**
+
+For the marketing department my advise would be to stack some of the items customers likely to buy after buying a specific item, for example
+
+  * Stacking: mushroom cream sauce, pasta together with escalope
+
+  * Stacking: ground beef, nonfat milk together with mineral water
+
+  * Stacking: bacon, pancakes together with spaghetti
+
+This is will also help in customer marketing reach, it would be a waste to approach someone who buys bacon and pancakes to buy escalope cause its not an item they buy, however, approaching them for spaghetti is a wise marketing decision.

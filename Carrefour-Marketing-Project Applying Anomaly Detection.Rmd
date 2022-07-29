@@ -1,0 +1,138 @@
+---
+title: "Carrefour-Marketing-Project Applying Anomaly Detection"
+author: "Dynasty"
+date: "`r Sys.Date()`"
+output:
+  word_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+# **Introduction**
+
+Carrefour has 13 outlets mostly located in the suburbs of Kenya's capital city, Nairobi. Their mission is to provide our customers with quality services, products and food accessible to all across all distribution channels.
+
+## **Problem Statement**
+
+The project aim to inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax).
+
+## **Metric of Success**
+a. Identification of anomalies In the given data set.
+b. Provide insights from the analysis on whether there was fraud or not. 
+
+## **Anomaly Detection**
+
+Loading libraries
+```{r}
+library(tidyverse)
+library(anomalize)
+library(tibbletime)
+library(anomalize)
+library(timetk)
+```
+
+
+
+Loading the data set
+```{r}
+data <- read.csv('http://bit.ly/CarreFourSalesDataset')
+head(data)
+```
+
+
+Change Date column to Date format
+```{r}
+data$Date <- as.Date(data$Date, format ="%m/%d/%Y")
+data$Date <- sort(data$Date, decreasing = FALSE)
+```
+
+
+
+Will Convert data to a tibble
+```{r}
+data <- as_tbl_time(data, index = Date)
+head(data)
+```
+
+
+```{r}
+data <- data %>%
+    as_period("daily")
+```
+
+Previewing the number of objects in the data set
+```{r}
+dim(data)
+```
+We have 89 rows and 2 columns
+
+**Visualize the Anomalies**
+
+Plotting Anomalies using different alphas 
+a. alpha 0.5
+```{r}
+data %>%
+    time_decompose(Sales) %>%
+    anomalize(remainder) %>%
+    time_recompose() %>%
+    plot_anomalies(time_recomposed = TRUE, ncol = 3, alpha_dots = 0.5)
+```
+We can see there was no anomalies (red dot) detected
+
+```{r}
+data %>%
+    time_decompose(Sales) %>%
+    anomalize(remainder) %>%
+    time_recompose() %>%
+    plot_anomalies(time_recomposed = TRUE, ncol = 3, alpha_dots = 0.75)
+```
+We can see there was no anomalies (red dot) detected
+
+
+```{r}
+data %>%
+    time_decompose(Sales) %>%
+    anomalize(remainder) %>%
+    time_recompose() %>%
+    plot_anomalies(time_recomposed = TRUE, ncol = 3, alpha_dots = 1)
+```
+We can see there was no anomalies (red dot) detected
+
+
+```{r}
+data %>%
+    time_decompose(Sales) %>%
+    anomalize(remainder) %>%
+    time_recompose() %>%
+    plot_anomalies(time_recomposed = TRUE, ncol = 3, alpha_dots = 0.05)
+```
+We can see there was no anomalies (red dot) detected
+
+
+**Adjusting Trend and Seasonality**
+
+```{r}
+data %>%
+    time_decompose(Sales) %>%
+    anomalize(remainder) %>%
+    time_recompose() %>%
+    plot_anomaly_decomposition() +
+    ggtitle("Freq/Trend = 'auto'")
+```
+ 
+ We still have no anomalies detected.
+
+Let's view logical frequency and trend spans based on the scale of the data.
+```{r}
+get_time_scale_template()
+```
+The tibble shows that the scale, the frequency and the trend used for our time series by the system.
+
+
+**Conclusion**
+
+We can confidently advise Carrefour marketing department that there was no anomaly detected. 

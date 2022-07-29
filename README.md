@@ -47,3 +47,11 @@ b. Provide insights from the analysis on whether there was fraud or not.
 
 
 
+Data Sources
+
+Part 1 and 2: Dataset [http://bit.ly/CarreFourDataset].
+
+Part 3: Dataset [http://bit.ly/SupermarketDatasetII].
+
+Part 4: Dataset [http://bit.ly/CarreFourSalesDataset].
+

@@ -1,0 +1,471 @@
+---
+title: "Carrefour-Marketing-Project Applying Dimensionality Reduction"
+author: "Dynasty"
+date: "`r Sys.Date()`"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **Introduction**
+
+Carrefour has 13 outlets mostly located in the suburbs of Kenya's capital city, Nairobi. Their mission is to provide our customers with quality services, products and food accessible to all across all distribution channels.
+
+## **Problem Statement**
+
+The project aim to inform the marketing department on the most relevant marketing strategies that will result in the highest no. of sales (total price including tax).
+
+## **Metrics Of Success**
+
+1. Perform data cleaning and EDA.
+2. Applying method of dimensional reduction (PCA).
+3. Providing insights gained from the analysis.
+
+
+## **Data Understanding**
+
+Libraries necessary
+```{r}
+library(data.table)
+library(dplyr)
+library(tidyverse)
+library(ggplot2)
+```
+
+
+Loading the data set
+```{r}
+df <- read.csv("http://bit.ly/CarreFourDataset")
+```
+
+Previewing the data set
+```{r}
+head(df)
+```
+
+Number of records
+```{r}
+dim(df)
+```
+We have 1000 rows and 16 columns.
+
+
+Checking the structure of the data set
+```{r}
+str(df)
+```
+We have 8 numeric columns, 5 categorical column and two columns with date/time.
+
+
+
+## **Data Cleaning and Data Preparation**
+
+**Checking for Missing Values**
+```{r}
+is.null(df)
+```
+We don't have Null values is the data set.
+
+**Checking for Duplicates**
+```{r}
+duplicated_rows <- df[duplicated(df),]
+duplicated_rows
+```
+We don't have duplicates in our data set
+
+
+**Checking for Outliers**
+
+Selecting the numeric columns
+```{r}
+num <- df[,c(6:8, 12, 14:16)]
+
+num
+```
+
+```{r}
+ggplot(num) +
+  aes(x = "", y = Unit.price) +
+  geom_boxplot(fill = "#0c4c8a") +
+  theme_minimal()
+```
+
+```{r}
+ggplot(num) +
+  aes(x = "", y = Quantity) +
+  geom_boxplot(fill = "#0c4c8a") +
+  theme_minimal()
+```
+
+
+```{r}
+ggplot(num) +
+  aes(x = "", y = Tax) +
+  geom_boxplot(fill = "#0c4c8a") +
+  theme_minimal()
+```
+
+
+```{r}
+ggplot(num) +
+  aes(x = "", y = cogs) +
+  geom_boxplot(fill = "#0c4c8a") +
+  theme_minimal()
+```
+
+
+```{r}
+ggplot(num) +
+  aes(x = "", y = gross.income) +
+  geom_boxplot(fill = "#0c4c8a") +
+  theme_minimal()
+```
+
+
+
+
+```{r}
+ggplot(num) +
+  aes(x = "", y = Rating) +
+  geom_boxplot(fill = "#0c4c8a") +
+  theme_minimal()
+```
+
+
+```{r}
+ggplot(num) +
+  aes(x = "", y = Total) +
+  geom_boxplot(fill = "#0c4c8a") +
+  theme_minimal()
+```
+
+
+
+
+The box plots above clearly indicate we have a few outliers in Tax, cogs, gross.income and total column. However, they are important for our analysis so will keep them for now
+
+
+
+# **Exploratory Data Analysis**
+
+### **Univariate Analysis**
+
+Previewing branch distribution
+```{r}
+branch <- (df$Branch)
+branch.frequency <- table(branch)
+branch.frequency
+```
+
+
+```{r}
+barplot(branch.frequency,
+  main="A bar chart showing Branch distribution",
+  xlab="Branch",
+  ylab = "Frequency",
+  col=c("red","purple", "blue"),
+  )
+```
+
+
+
+The bar graph above shows Branch A had the highest distribution with Brach c with the least even though the differences was very minimal.
+
+
+Previewing Product line distribution
+```{r}
+pl <- (df$Product.line)
+pl.frequency <- table(pl)
+pl.frequency
+```
+```{r}
+barplot(pl.frequency,
+  main="A bar chart showing Product line distribution count",
+  xlab="Product Line",
+  ylab = "Count",
+  col=c("#eb8060", "#b9e38d", "green", "yellow", "#a1e9f0", "#d9b1f0"),
+  )
+```
+
+Most sales were from Fashion accessories product line while least sales were from Health and beauty product line. 
+
+
+Previewing Customer type Distribution
+```{r}
+cust <- (df$Customer.type)
+cust.frequency <- table(cust)
+cust.frequency
+```
+
+
+```{r}
+barplot(cust.frequency,
+  main="A bar chart showing Customer type distribution count",
+  xlab="Customer Type",
+  ylab = "Count",
+  col=c("red","purple"),
+  )
+```
+
+
+Most customer were members customers. 
+
+
+Previewing Gender distribution
+```{r}
+gender <- (df$Gender)
+gender.frequency <- table(gender)
+gender.frequency
+```
+
+
+```{r}
+barplot(gender.frequency,
+  main="A bar chart showing Gender distribution count",
+  xlab="Gender",
+  ylab = "Count",
+  col=c("magenta","purple"),
+  )
+```
+
+Most customers were female
+
+Previewing payment methods
+```{r}
+payment <- (df$Payment)
+payment.frequency <- table(payment)
+payment.frequency
+```
+
+
+```{r}
+barplot(payment.frequency,
+  main="A bar chart showing payment method distribution count",
+  xlab="Payment Method",
+  ylab = "Count",
+  col=c("magenta","purple", "green"),
+  )
+```
+Most customers use Ewallet and least payment method used by customers is via credit card.
+
+
+Previewing Unit prices distribution
+```{r}
+hist((df$Unit.price),  
+main = "Histogram of Unit Price distribution",
+     xlab = 'Unit Price', 
+     ylab = 'Frequency',
+     col = "blue")
+```
+
+Maximum unit prices were around 100.
+
+
+```{r}
+hist((df$Quantity),  
+main = "Histogram of Quantity distribution",
+     xlab = 'Quantity', 
+     ylab = 'Frequency',
+     col = "blue")
+```
+
+
+```{r}
+hist((df$Tax),  
+main = "Histogram of Tax distribution",
+     xlab = 'Tax', 
+     ylab = 'Frequency',
+     col = "blue")
+```
+
+
+```{r}
+hist((df$cogs),  
+main = "Histogram of cost of goods sold distribution",
+     xlab = 'cost of goods sold', 
+     ylab = 'Frequency',
+     col = "blue")
+```
+
+
+```{r}
+hist((df$gross.income),  
+main = "Histogram of gross income distribution",
+     xlab = 'gross income', 
+     ylab = 'Frequency',
+     col = "blue")
+```
+
+
+```{r}
+hist((df$Rating),  
+main = "Histogram of Rating distribution",
+     xlab = 'Rating', 
+     ylab = 'Frequency',
+     col = "blue")
+```
+
+```{r}
+hist((df$Total),  
+main = "Histogram of Total distribution",
+     xlab = 'Total', 
+     ylab = 'Frequency',
+     col = "blue")
+```
+
+
+
+### **Bivariate Analysis**
+```{r}
+plot((df$Unit.price), (df$Tax), 
+     main = "A scatterplot of Unit Price against Tax",
+     xlab = 'Unit Price', 
+     ylab = 'Tax',
+     col = "blue")
+```
+
+The higher the unit price the higher the tax applied
+
+
+```{r}
+ggplot(df,aes(x=gross.income, y=Tax))+geom_line()+
+ggtitle("A scatterplot of Gross income against Tax")+
+theme(plot.title = element_text(hjust=0.5))
+```
+
+Tax increases with increase in Gross income.
+
+```{r}
+ggplot(df,aes(x=cogs, y=Tax))+geom_line()+
+ggtitle("A scatterplot of cost of goods sold against Tax")+
+theme(plot.title = element_text(hjust=0.5))
+```
+The higher the cost of goods sold the tax increases.
+
+```{r}
+ggplot(df,aes(x=Date, y=Tax))+geom_line()
+```
+
+
+Tax has been increasing and decreasing over time
+
+
+
+### **Multivariate Analysis**
+
+getting a summary for the data set from our numeric columns
+```{r}
+summary(num)
+```
+We can observe the following:
+a. The  maximum unit price was 99.96 and the minimum was 10.08. 
+b. The maximum quantity ordered was 10 while the minimum was 1.
+c. The highest Tax applied was 49.65 while the least was 0.5.
+d. The highest rating was 10 while the least rating was 4.
+
+
+Ploting a correlation plot
+```{r}
+library(corrplot)
+corrplot(cor(num))
+```
+ From the graph we observe:
+ 
+a. Tax had a very strong correlation with cogs, gross.income and total and vice versa.
+
+
+
+
+# **Dimensional Reduction**
+
+## **1. PCA**
+
+Apply PCA to our numeric columns
+```{r}
+my_pca <- prcomp(num, scale = TRUE,
+                center = TRUE, retx = T)
+summary(my_pca)
+```
+
+We can see we have 7 Principal components. PC1 explains 70% of the total variance, which means that nearly three quarters of the information in the data set can be encapsulated by just that one Principal Component. PC2 explains 14% of the variance. and we can see that PCA values decrease as you go down the number of principals components.
+Cumulatively we see PC1 to PC3 have a proportion of 98.71% which tell us that it’s safe to say that we can fully understand this data set using only these three principal components.
+
+
+```{r}
+str(my_pca)
+```
+View the principal component loading
+```{r}
+my_pca$rotation
+```
+Positive loading indicate a variable and a principal component are positively correlated: an increase in one results in an increase in the other. Negative loading indicate a negative correlation. Large (either positive or negative) loading indicate that a variable has a strong effect on that principal component.
+
+
+See the principal components
+```{r}
+dim(my_pca$x)
+```
+
+Plotting our PCA 
+```{r}
+library(ggbiplot)
+ggbiplot(my_pca)
+```
+The graph shows the variables Rating, Unit.price, Quantity, gross.income contribute to PC1, with higher values in those variables. 
+
+
+adding more details
+```{r}
+ggbiplot(my_pca, labels=rownames(df), obs.scale = 0.5, var.scale = 1)
+```
+We have more factors but still our key attributites for analysis are still Rating, Unit.price, Quantity and gross.income
+
+
+Compute standard deviation
+```{r}
+my_pca$sdev
+```
+From this we see the standard deviation decreases with numberof principal components. 
+
+
+Compute variance
+```{r}
+my_pca.var <- my_pca$sdev ^ 2
+my_pca.var
+```
+Viewing Proportion of variance for a scree plot
+```{r}
+propve <- my_pca.var / sum(my_pca.var)
+propve
+```
+
+Plot variance explained for each principal component
+```{r}
+plot(propve, xlab = "principal component",
+            ylab = "Proportion of Variance Explained",
+            ylim = c(0, 1), type = "b",
+            main = "Scree Plot")
+```
+
+The graph shows the eigenvalues of factors of principal components in our analysis. It shows that below 2 principal components, there is a maximum proportion of variance as clearly seen in the plot, Meaning it can be used to determine the number of principal components to keep in our analysis in this case PC1. 
+
+
+Plot the cumulative proportion of variance explained
+```{r}
+plot(cumsum(propve),
+    xlab = "Principal Component",
+    ylab = "Cumulative Proportion of Variance Explained",
+    ylim = c(0, 1), type = "b")
+```
+The graph shows  Above 2 principal components, there is a maximum cumulative proportion of variance as clearly seen in the plot.
+
+
+
+**Conclusion**
+
+* We can confidently advise Carrefour marketing department on coming up with the most relevant marketing strategies they should consider unit.price, Rating, Quantity and gross.Income
+
